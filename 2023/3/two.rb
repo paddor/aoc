@@ -11,16 +11,12 @@ module AdventOfCode
       input.lines.map(&:chomp).map do |line|
         tokens = []
 
-        line.scan(/(?<number>\d+)|(?<gear>\*)|(?<symbol>[^.])/) do |match|
+        line.scan(/(?<number>\d+)|(?<symbol>[^.])/) do |match|
           match_data = Regexp.last_match
-          offset     = match_data.offset(0)[0]
-          len        = match_data[0].size
-          range      = offset .. offset + len - 1
+          range      = match_data.begin(0) ... match_data.end(0)
 
           if match_data['number']
             tokens << Token::Number.new(range, match_data[0])
-          elsif match_data['gear']
-            tokens << Token::Gear.new(range, match_data[0])
           elsif match_data['symbol']
             tokens << Token::Symbol.new(range, match_data[0])
           end
@@ -35,11 +31,11 @@ module AdventOfCode
       gears = []
 
       @lines.each.with_index do |tokens, i|
-        tokens.grep(Token::Gear).each do |gear|
-          adjacent_numbers = adjacent_numbers(i, gear.offset)
+        tokens.grep(Token::Symbol).select(&:gear?).each do |gear|
+          number_tokens = adjacent_numbers(i, gear.offset)
 
-          if adjacent_numbers.size == 2
-            a, b = adjacent_numbers.map(&:number)
+          if number_tokens.size == 2
+            a, b = number_tokens.map(&:number)
             gears << Gear.new(a, b)
           end
         end
@@ -52,7 +48,7 @@ module AdventOfCode
     private def adjacent_numbers(i, j)
       positions = [
         [i-1, j-1], [i-1, j], [i-1, j+1],
-        [i,   j-1], [i,   j], [i,   j+1],
+        [i,   j-1],           [i,   j+1],
         [i+1, j-1], [i+1, j], [i+1, j+1],
       ]
 
@@ -99,11 +95,10 @@ module AdventOfCode
     end
 
 
-    class Gear < Token
-    end
-
-
     class Symbol < Token
+      def gear?
+        @string == '*'
+      end
     end
   end
 end
