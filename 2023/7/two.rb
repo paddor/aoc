@@ -49,39 +49,52 @@ class CamelCards
 
     def type
       jokers = @hand.count 'J'
-      hand   = @hand.chars.sort.join.delete 'J'
+      tally  = @hand.delete('J').chars.tally.values
 
       case jokers
       when 5, 4
         :five_of_a_kind
       when 3
-        case hand # 2 chars
-        when /(.)\1/ then :five_of_a_kind
-        else :four_of_a_kind
+        if tally.include? 2
+          :five_of_a_kind
+        else
+          :four_of_a_kind
         end
       when 2
-        case hand # 3 chars
-        when /(.)\1\1/ then :five_of_a_kind
-        when /(.)\1/   then :four_of_a_kind
-        else :three_of_a_kind
+        if tally.include? 3
+          :five_of_a_kind
+        elsif tally.include? 2
+          :four_of_a_kind
+        else
+          :three_of_a_kind
         end
       when 1
-        case hand # 4 chars
-        when /(.)\1{3}/   then :five_of_a_kind
-        when /(.)\1\1/    then :four_of_a_kind
-        when /(.)\1(.)\2/ then :full_house
-        when /(.)\1/      then :three_of_a_kind
-        else :one_pair
+        if tally.include? 4
+          :five_of_a_kind
+        elsif tally.include? 3
+          :four_of_a_kind
+        elsif tally.count(2) >= 2
+          :full_house
+        elsif tally.include? 2
+          :three_of_a_kind
+        else
+          :one_pair
         end
       else
-        case hand # 5 chars
-        when /(.)\1{4}/                  then :five_of_a_kind
-        when /(.)\1{3}/                  then :four_of_a_kind
-        when /(.)\1\1(.)\2|(.)\3(.)\4\4/ then :full_house
-        when /(.)\1\1/                   then :three_of_a_kind
-        when /(.)\1.?(.)\2/              then :two_pair
-        when /(.)\1/                     then :one_pair
-        else :high_card
+        if tally.include? 5
+          :five_of_a_kind
+        elsif tally.include? 4
+          :four_of_a_kind
+        elsif tally.include?(3) && tally.include?(2)
+          :full_house
+        elsif tally.include? 3
+          :three_of_a_kind
+        elsif tally.count(2) >= 2
+          :two_pair
+        elsif tally.include?(2)
+          :one_pair
+        else
+          :high_card
         end
       end
     end
